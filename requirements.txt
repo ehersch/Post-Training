@@ -1,0 +1,16 @@
+# Local dev (Mac-compatible)
+transformers>=4.47.0
+datasets>=3.0.0
+trl>=0.12.0
+accelerate>=1.0.0
+torch>=2.1.0
+
+# Modal for remote GPU (training + vllm inference)
+modal>=0.73.0
+
+# OpenAI-compatible client for vLLM server
+openai>=1.0.0
+
+# Training (GPU/Linux only — install on Modal, not Mac)
+deepspeed
+flash-attn  # requires --no-build-isolation and CUDA

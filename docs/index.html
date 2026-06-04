@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post-Training Playbook · Ethan Hersch</title>
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <style>
+    /* ── Reset & base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1a1a;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --max-w: 720px;
+      --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+    }
+
+    html { font-size: 17px; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    nav .wordmark {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      text-decoration: none;
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+    }
+
+    nav .nav-links a {
+      font-size: 0.875rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    nav .nav-links a:hover { color: var(--fg); }
+
+    /* ── Main content ───────────────────────────────────────── */
+    main {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 4rem 1.5rem 6rem;
+    }
+
+    /* ── Post header ────────────────────────────────────────── */
+    .post-meta {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+    }
+
+    h1.post-title {
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+
+    .post-subtitle {
+      font-size: 1.125rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      line-height: 1.55;
+    }
+
+    .author-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .author-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .author-info { font-size: 0.875rem; }
+    .author-info strong { display: block; color: var(--fg); }
+    .author-info span { color: var(--muted); }
+
+    /* ── Prose ──────────────────────────────────────────────── */
+    .prose h2 {
+      font-size: 1.375rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      margin: 3rem 0 0.75rem;
+    }
+
+    .prose h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 2rem 0 0.5rem;
+      color: var(--fg);
+    }
+
+    .prose p { margin-bottom: 1.25rem; }
+
+    .prose a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .prose ul, .prose ol {
+      padding-left: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .prose li { margin-bottom: 0.35rem; }
+
+    .prose strong { font-weight: 600; }
+
+    .prose blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 0.5rem 0 0.5rem 1.25rem;
+      color: var(--muted);
+      font-style: italic;
+      margin: 1.5rem 0;
+    }
+
+    /* ── Code ───────────────────────────────────────────────── */
+    .prose code {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      color: #c7254e;
+    }
+
+    .prose pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+      line-height: 1.65;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .prose pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    /* ── Figures / images ───────────────────────────────────── */
+    .prose figure {
+      margin: 2.5rem 0;
+    }
+
+    .prose figure img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .prose figcaption {
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-top: 0.6rem;
+    }
+
+    /* ── Callout box ────────────────────────────────────────── */
+    .callout {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .callout strong { color: var(--accent); }
+
+    /* ── Footnotes ──────────────────────────────────────────── */
+    .footnote-ref {
+      font-size: 0.72em;
+      vertical-align: super;
+      color: var(--accent);
+      text-decoration: none;
+      margin-left: 1px;
+    }
+    .footnote-ref:hover { text-decoration: underline; }
+
+    .references {
+      margin: 3rem 0 1rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .references h2 {
+      font-size: 1.1rem;
+      font-weight: 650;
+      margin-bottom: 0.75rem;
+    }
+    .references ol {
+      list-style: none;
+      padding: 0;
+      counter-reset: ref;
+    }
+    .references li {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      line-height: 1.55;
+      padding-left: 2rem;
+      text-indent: -2rem;
+    }
+    .references li::before {
+      counter-increment: ref;
+      content: "[" counter(ref) "] ";
+      color: var(--fg);
+      font-weight: 600;
+    }
+    .references a { color: var(--accent); }
+
+    /* ── Divider ────────────────────────────────────────────── */
+    .prose hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--muted); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a class="wordmark" href="#">Ethan Hersch</a>
+    <ul class="nav-links">
+      <li><a href="#">Writing</a></li>
+      <li><a href="#">Projects</a></li>
+      <li><a href="https://github.com/ehersch" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <!-- Post -->
+  <main>
+    <div class="post-meta">June 2026 &nbsp;·&nbsp; Post-Training Playbook</div>
+
+    <h1 class="post-title">Let's Go Through Post-Training Step-By-Step</h1>
+
+    <p class="post-subtitle">
+      A hands-on walkthrough of the techniques that turn a raw language model into a useful assistant. Starting with an open-weight Qwen base model, I give a roadmap of supervised fine-tuning, RLHF, and preference optimization.
+    </p>
+
+    <p class="callout"><strong>TL;DR:</strong> It doesn't take a ton of data (or time, or compute) to alter the behaviors of a small model. Post-training used to exist in a more theoretical landscape for me, but it's actually approachable to put into practice.</p>
+
+    <div class="author-row">
+      <div class="author-avatar">EH</div>
+      <div class="author-info">
+        <strong>Ethan Hersch</strong>
+        <span>8 min read</span>
+      </div>
+    </div>
+
+    <!-- ── Body ─────────────────────────────────────────────── -->
+    <article class="prose">
+
+      <h2>Why post-training matters</h2>
+      <p>
+        There are a lot of great tutorials out there to understand language modeling from scratch. You can download some text corpus and implement GPT-2 from scratch to perform next token prediction. The jump from a demo like this to state of the art is definitely a big one, but a lot of this is dedicated to the scale of data and training. Scaling laws show that taking GPT-2 and scaling it up with more transformer blocks, more data, and compute will minimize cross entropy loss (plus some systems considerations and things like mixture of experts at the SOTR).
+      </p>
+
+      <p>
+        However, just scaling and maximizing perplexity score creates a model that is really good at immitating your text corpus (like the internet, books, etc.). These models memorize tons of data, but can't actually understand what it means to produce responses a human finds helpful. This is where the power of post-training emerges. This occurs in multiple steps:
+      </p>
+
+      <ul>
+        <li>Supervised fine tuning (SFT) uses the same pretrianing cross-entropy loss (with LoRA) on high quality question-answer pairs.</li>
+        <li>Reinforcement learning from human feedback (RLHF) uses a copy of the base model as a reward model and uses Proximal Policy Optimization (PPO) to increase the likelihood of tokens in trajectories that lead to high rewards.</li>
+        <li>Rather than consuming the memory and stability burden of training a separate value function, Direct Preference Optimization (DPO) uses an analogous RLHF objective that does not require a value function.
+        </li>
+        </ul>
+
+      <p>
+        I will go over the theory and implementation of each of these processes, usuing the standard packages and implementation tools to do this in practice in 2026. Most importantly, I will show how our model behaves every step of the way to gain insight into what's actually happening during post-training and how we go from word completion to a useful AI assistant.
+      </p>
+
+      <hr />
+
+      <h2>Step 1 — The base model</h2>
+      <p>This demo should be easy to run and accessible. I'm using Modal for inference and training, but all models can also run on a local CPU (I tried with my Apple M2 with 16GB RAM and this worked fine). If you want to reproduce training runs, I use an A10G which is only ~$1/hr.</p>
+
+      <p>That being said, the base model is Qwen-2.5-0.5B<a href="#ref-1" class="footnote-ref">[1]</a><a href="#ref-2" class="footnote-ref">[2]</a>. At FP16 quantization, its weights can be stored in 1GB of VRAM, with an additional ~1GB required to run local inference (because of overhead). This model has 24 layers and 16 attention heads. Aside from the advantages of using a smaller model for an optimized memory footprint, smaller models also require less data (during post-training) to augment their behavior. This means that during SFT and RL stages, we can use fewer high-quality examples and rollouts to create a useful assistant.</p>
+
+      <figure style="margin: 2rem auto; max-width: 480px;">
+        <img src="figs/pull.png" alt="Post-training pipeline overview"
+             style="width: 100%; border-radius: 8px; border: 1px solid var(--border);" />
+      </figure>
+
+      <p>If we try to use the base model, it won't be very useful. However, it understands most spelling, grammar, and language structure.</p>
+
+      <pre><code>Prompt: How do I make ratatouille?
+
+Response:
+I have a recipe for ratatouille, but I'm not sure how to make it.
+Can you help me out?
+
+Certainly! Ratatouille is a classic French dish that's perfect for
+a summer night. Here's a simple recipe to get you started:
+
+### Ingredients:
+- 1 large eggplant (about 2 medium-sized)
+- 1 red bell pepper (about 1 medium-sized)
+- 1 yellow bell pepper (about 1 medium-sized)
+- 1</code></pre>
+
+  The model actually gives the start of a ratatoullie recipe (it suddenly gets cut off and doesn't tell us more), but if you look at the first line, it seems this comes from a conversation where someone is asking how ratatoullie is made. This data can give us a recipe, but this is just an insight into how a base model will simply training examples and generate the tokens closest to the prompt.
+
+  This can be seen very well in the following example:
+
+      <pre><code>Prompt: Who are the best professors to explain NLP?
+
+Response:
+Lonely Professor is the best. Lorem ipsum dui tempor, vestibulum
+viverra, maturus sed, tincidunt et, metus. Lorem ipsum dui tempor,
+vestibulum viverra, maturus sed, tincidunt et, metus. Lorem ipsum
+dui tempor, vestibulum viverra, maturus sed, tincidunt et, metus.
+Lorem ipsum dui tempor, vestibulum viverra...</code></pre>
+
+<p>I'm not so sure about the lonely part, but the latter portion is nonsensical Latin used as rubbish to show text layouts. There's a lot of this random text on the internet that means nothing to you and me, so even more the reason why post-training is critical.</p>
+
+      <pre><code>Prompt: How are you made? Who made you?
+
+Response:
+What is your name? What is your age? What is your gender? What is
+your nationality? What is your religion? What is your occupation?
+What is your ethnicity? What is your political affiliation? What
+is your political party? What is your political ideology? What is
+your political stance? What is your political background? What is
+your political history? What is your political philosophy? What
+is your political vision? What is your political strategy? What
+is your political agenda? What is your political vision</code></pre>
+
+      <p>The model just responds with many more questions. It never answers the question because we don't align the model with question answering. It seems a model should simply answer a question, but this is behavior we have to teach a model how to do. One natural workaround is <em>few-shot prompting</em>: showing the model the answer format we want by giving it a couple of examples right in the prompt, then asking our real question. With a fully post-trained model, this is a powerful tool. With a base model, it almost works — but not really:</p>
+
+      <pre><code>Prompt:
+Who is Ethan? Ethan is a builder who likes understanding how
+things work. Who is Rico? Rico is Ethan's cavapoo back at home.
+Who are you?
+
+Response:
+Hello Ethan. I'm a system that helps people understand how things
+work better. What do you want to know about? Rico? Rico is a
+builder who likes understanding how things work. Who are you?
+DNC? DNC is a data-driven company. DNC has marketing and sales
+teams that help companies make decisions and grow. DNC also has
+a team of developers who create tools and software for companies.
+DNC is a team of developers who create tools and software for
+companies. DNC is a team of developers who create tools and
+software for companies. DNC is a team of developers who create
+tools and software for companies. [...]</code></pre>
+
+      <p>The first sentence is actually promising — the model picks up on the Q/A pattern and starts to introduce itself ("I'm a system that helps people..."). But then it immediately loses track: it scrambles who Rico is, invents a new entity called "DNC" that wasn't in our prompt, and then collapses into mode-collapse repetition. Few-shot prompting can hint at the right behavior, but without proper instruction tuning the base model doesn't <em>commit</em> to the role of an answerer. It still treats the prompt as text to continue rather than a question to answer.</p>
+
+      <p>You'll also notice the model almost always opens its output with something like <code>You are a helpful assistant.</code> before going off the rails. That phrase isn't in our prompt — so where is it coming from? Behind the scenes, we send our prompt through OpenAI-style chat completions, which wraps it in Qwen's chat template. That template prepends a default system message:</p>
+
+      <pre><code>&lt;|im_start|&gt;system
+You are Qwen, created by Alibaba Cloud. You are a helpful assistant.&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+Q: Who is Ethan? A: ...&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant</code></pre>
+
+      <p>An instruction-tuned model would treat that system message as a silent role specification and just generate the assistant reply. But the base model has never been trained on the chat template at all — to it, the system message is just more text to continue. So the very first thing it does is echo a piece of the system prompt right back at us. It's not pretending to be an assistant; it's literally completing the document it was handed. This is another concrete reason post-training matters: SFT teaches the model that the system block is a <em>role</em>, not a <em>line to continue</em>.</p>
+
+      <p>The model has a good understanding of human language and (for the most part) will generate correct english. But it doesn't accomplish our question-answering objective. This is the first goal of SFT.</p>
+
+      <h2>Step 2 — Supervised Fine-Tuning (SFT)</h2>
+      <p>We can use a similar loss from pretraining (cross entropy loss/minimizing error on next-token prediction) for SFT. But now we need a more high-quality and focused dataset. This also means we don't need a lot of data for SFT.</p>
+
+      <h3>The dataset</h3>
+      <p>
+        First, we need a dataset to perform SFT on.
+        Alpaca<a href="#ref-3" class="footnote-ref">[3]</a>
+        is a collection of 52,000 high-quality instruction-response pairs released by Stanford.
+        Training on it teaches a base model how to follow instructions — a process also called
+        <em>instruction fine-tuning</em>. SFT is really an umbrella for "teach a model
+        capability X by showing it examples of X," and Alpaca specifically targets the
+        general-purpose chatbot capability: answering questions, writing things, editing text,
+        and so on.
+      </p>
+
+      <p>
+        This is the most straightforward, and generally first approach, of post-training. For
+        saving computation, use LoRA to avoid fine tuning every weight in your model, and
+        rather train low-rank additions to your frozen base parameters. In my model, I only do
+        LoRA with rank 8 on the query and key projections in self attention: the trainable
+        parameters are therefore far fewer.
+      </p>
+
+      <div class="callout">
+        The Q projection has input dimension 896 (hidden dimension) and output
+        <span class="math">14&times;64 = 896</span> since there are 14 heads with dimension 64.
+        The V projection has input dimension 896 with output
+        <span class="math">2&times;64 = 128</span> since this has 2 heads. Therefore, there are
+        <span class="math">(896&times;8 + 8&times;896) + (896&times;8 + 8&times;128) = 22,528</span>
+        trainable parameters per layer. With 24 layers, this is <strong>540,672 trainable
+        parameters</strong>, or about <strong>0.1%</strong> of the original model (495 million).
+      </div>
+
+      <p>The instructions are deliberately diverse. Two examples:</p>
+
+      <h4 style="font-weight: 600; margin: 1.5rem 0 0.4rem;">Example 1 — Creative writing</h4>
+      <pre><code>Instruction:
+Generate a poem that expresses joy.
+
+Response:
+Joy flows through me like a river clear,
+Bringing laughter and bliss to my soul to hear.
+
+The world is bright and wonderful, I can see,
+Making every moment something happy and free.
+
+My heart feels light, my cares have flown,
+As I discover what happiness gives me alone.
+
+I open my arms and accept the joy,
+Bringing life to my song, so sweet like a toy.
+
+Every moment is a precious gift,
+That I savor and never let drift.</code></pre>
+
+      <h4 style="font-weight: 600; margin: 1.5rem 0 0.4rem;">Example 2 — Text editing</h4>
+      <pre><code>Instruction:
+Edit the following sentence to make it more concise.
+
+Input:
+He ran to the bus stop in order to catch the bus that was due
+to arrive in five minutes.
+
+Response:
+He ran to the bus stop, due to arrive in five minutes.</code></pre>
+
+      <p>
+        Internally, Alpaca wraps each example in a fixed prompt template that the model sees
+        during training:
+      </p>
+
+      <pre><code>Below is an instruction that describes a task, paired with an input
+that provides further context. Write a response that appropriately
+completes the request.
+
+### Instruction:
+Edit the following sentence to make it more concise.
+
+### Input:
+He ran to the bus stop in order to catch the bus that was due to
+arrive in five minutes.
+
+### Response:
+He ran to the bus stop, due to arrive in five minutes.</code></pre>
+
+      <p>
+        This template is what the model effectively learns to "fill in" — given everything up
+        through <code>### Response:</code>, predict the answer that follows. (When we use
+        LLaMA-Factory with <code>--template qwen</code>, this Alpaca template gets re-wrapped
+        into Qwen's native <code>&lt;|im_start|&gt;</code> / <code>&lt;|im_end|&gt;</code> chat
+        format so the SFT'd model speaks the same dialect as the base.)
+      </p>
+      <h3>Training on Modal</h3>
+      <p>Walk through the LLaMA-Factory config and what each flag does.</p>
+
+      <pre><code>llamafactory-cli train \
+  --stage sft \
+  --model_name_or_path Qwen/Qwen2.5-0.5B \
+  --dataset alpaca_en \
+  --template qwen \
+  --finetuning_type lora \
+  --num_train_epochs 1</code></pre>
+
+      <figure>
+        <img src="sft_loss_curve.png" alt="SFT training loss curve for Qwen2.5-0.5B on Alpaca" />
+        <figcaption>LoRA SFT training loss for Qwen2.5-0.5B on Alpaca (3,251 steps, 1 epoch).</figcaption>
+      </figure>
+
+      <h3>Loss masking — the most important detail in SFT</h3>
+      <p>
+        SFT looks like pretraining: next-token prediction with cross-entropy loss. But there's one
+        critical difference that's easy to get wrong. We do <em>not</em> want the model to be
+        penalized for failing to predict the user's question — we only care about how well it
+        predicts the assistant's answer.
+      </p>
+
+      <p>
+        Concretely, given a training example like
+        <code>[user: What is 2+2?] [assistant: 4]</code>, the labels passed to the cross-entropy
+        loss should look like this:
+      </p>
+
+      <pre><code>input_ids: [user: What is 2+2?]  [assistant: 4]
+labels:    [-100, -100, ..., -100]  [4]</code></pre>
+
+      <p>
+        The <code>-100</code> token tells PyTorch to ignore those positions when computing the
+        loss. The gradient signal flows <em>only</em> through the assistant's response tokens,
+        meaning 100% of the learning signal goes toward generating better answers — not toward
+        memorizing the prompt format.
+      </p>
+
+      <div class="callout">
+        <strong>Why this matters:</strong> Without masking, the model wastes capacity learning to
+        predict prompts. At small model scale (500M parameters), there's much less capacity to
+        waste — so the gap between masked and unmasked SFT is more dramatic than at frontier
+        scale. Put another way: SFT is maximizing
+        <code>log p(answer | question)</code>. If you compute loss over the question too, you're
+        accidentally maximizing <code>log p(question)</code> as well, which is irrelevant noise.
+      </div>
+
+      <p>
+        LLaMA-Factory handles this automatically when you specify <code>--stage sft</code> with a
+        chat template like <code>--template qwen</code>. You can verify it's working by inspecting
+        the first batch of training data — the <code>label_ids</code> for the system + user tokens
+        will all be <code>-100</code>:
+      </p>
+
+      <pre><code>input_ids:
+[151644, 8948, 198, ..., 151645, 198, 151644, 77091, 198,
+ 16, 5142, 266, 264, 23831, 9968, ...]
+
+label_ids:
+[-100, -100, -100, ..., -100, -100, -100,
+ 16, 5142, 266, 264, 23831, 9968, ...]
+        ↑ loss starts here, at the first assistant token</code></pre>
+
+      <p>
+        If you were doing this with TRL's <code>SFTTrainer</code> instead, you'd use
+        <code>DataCollatorForCompletionOnlyLM</code> for the same effect.
+      </p>
+
+      <hr />
+
+      <div class="callout">For inverence, Qwen recommends vLLM: this is what we use to serve our model for decent inference capacity on 1 A10G.</div>
+
+      <h2>Step 3 — Direct Preference Optimization (DPO)</h2>
+
+      <p>
+        SFT teaches the model to imitate good answers. But "good" is hard to define. The model only sees one demonstration per question, and it has no
+        signal about <em>relative quality</em> between two competing answers. The next step
+        in post-training is to fix that: give the model pairs of (chosen, rejected) responses
+        and teach it which one is preferable. After the instruction answering that SFT produces, with DPO we should expect to see the emergence of desired responses: for instance, short repsonses that are straight to the point answering questions.
+      </p>
+
+      <p>
+        Classically you'd do this with PPO: train a separate reward model on preference data,
+        then run reinforcement learning against that reward. PPO works, but it's a logistical
+        headache — four models in memory at once (policy, reference, value, reward), notorious
+        instability, and an entire reward-model training pipeline you also have to maintain.
+        <strong>Direct Preference Optimization</strong> sidesteps all of that. It reformulates
+        the RLHF objective so you can train directly on preference pairs using a closed-form
+        loss, no reward model required.
+      </p>
+
+      <p>
+        The intuition: given a prompt <code>x</code>, a chosen response <code>y<sub>w</sub></code>,
+        and a rejected response <code>y<sub>l</sub></code>, DPO increases
+        <code>log p(y<sub>w</sub> | x)</code> and decreases
+        <code>log p(y<sub>l</sub> | x)</code>, regularized so the model doesn't drift too far
+        from the reference (the SFT'd model). It's effectively reinforcement learning whose
+        Bellman update collapses into a single closed-form gradient step.
+      </p>
+
+      <h3>The DPO loss</h3>
+
+      <p>
+        Concretely, the DPO loss for a single preference pair
+        <code>(x, y<sub>w</sub>, y<sub>l</sub>)</code> is:
+      </p>
+
+      <p>$$\mathcal{L}_{\text{DPO}}(\pi_\theta; \pi_{\text{ref}}) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)} \right) \right]$$</p>
+
+      <p>where:</p>
+      <ul>
+        <li><code>π<sub>θ</sub></code> is the policy we're training (the SFT model with a
+            new LoRA adapter on top).</li>
+        <li><code>π<sub>ref</sub></code> is the frozen reference policy (the SFT'd model
+            itself, used as a baseline so the trained model doesn't drift too far).</li>
+        <li><code>σ</code> is the sigmoid function — DPO is doing binary classification on
+            "did the model prefer chosen over rejected?"</li>
+        <li><code>β</code> (typically 0.1) is a KL temperature. Higher <code>β</code> means
+            the model can move further from the reference; lower means tighter regularization.</li>
+      </ul>
+
+      <p>
+        The bracketed quantity is the difference of two log-probability ratios. You can read
+        it as: "how much more likely is the chosen response under our policy vs. the reference,
+        minus how much more likely the rejected response is under our policy vs. the
+        reference." Minimizing the loss pushes that bracketed quantity up — i.e. shift
+        probability mass from the rejected response onto the chosen response, while staying
+        close to the reference everywhere else.
+      </p>
+
+      <p>
+        This formulation is what eliminates the need for an explicit reward model. The original
+        RLHF objective wanted to maximize
+        <code>E[r(x, y)] − β · KL(π<sub>θ</sub> ‖ π<sub>ref</sub>)</code>, which requires
+        learning <code>r</code> from preference data and then doing PPO against it. The DPO
+        paper shows you can solve that constrained maximization analytically. The optimal
+        policy has the form
+        <code>π*(y|x) ∝ π<sub>ref</sub>(y|x) · exp(r(x,y) / β)</code>, which you can invert to
+        get <code>r(x,y) = β · log(π*(y|x) / π<sub>ref</sub>(y|x))</code>. Substituting that
+        implicit reward back into the Bradley-Terry preference likelihood gives the loss above
+        — no separate reward model required, just two log-ratio terms.
+      </p>
+
+      <h3>The pipeline</h3>
+
+      <p>
+        DPO takes the SFT model as its <em>starting point</em>, not the raw base model. This
+        matters mechanically: the DPO LoRA adapter is trained on top of a model that has SFT
+        already baked into its weights. So at inference time we can't just slap the DPO adapter
+        onto the bare base — the adapter expects to see SFT-modified hidden states underneath
+        it. To set this up correctly:
+      </p>
+
+      <ol>
+        <li>Take the SFT LoRA adapter and merge its weights into the base model.</li>
+        <li>Save that merged checkpoint as a new "base + SFT" model.</li>
+        <li>Train the DPO adapter against that merged checkpoint.</li>
+        <li>At inference, serve the merged checkpoint as the base and apply only the DPO LoRA
+            on top.</li>
+      </ol>
+
+      <p>
+        I learned this the hard way — my first DPO inference setup served the DPO adapter on
+        top of the raw base model, which gave nonsensical outputs because the adapter's
+        contribution assumed an SFT'd substrate that wasn't there. After merging SFT into a
+        fresh base checkpoint and re-serving, the DPO model started producing coherent
+        responses again.
+      </p>
+
+      <h3>Dataset</h3>
+
+      <p>
+        I used <code>llamafactory/DPO-En-Zh-20k</code> (English split), a curated preference
+        dataset with ~10k (prompt, chosen, rejected) triples. Data is distributed across known preference datasets, such as `f argilla/ultrafeedback-binarized-preferences-cleaned`. Training is one epoch with a
+        very low learning rate (5e-6) and <code>β = 0.1</code> — the standard DPO temperature
+        from the original paper. By the end of training, the model achieved
+        <strong>~70% chosen-vs-rejected accuracy</strong> (meaning it correctly assigns
+        higher probability to the chosen response in 7 out of 10 held-out pairs).
+      </p>
+
+      <figure>
+        <img src="figs/dpo_plot.png" alt="DPO training curves: loss, preference accuracy, implicit rewards, and reward margin over training steps" />
+        <figcaption>
+          DPO training diagnostics. Top-left: loss decreases steadily. Top-right: preference
+          accuracy climbs from ~50% (random) toward ~70%. Bottom-left: implicit reward on
+          chosen responses rises while rejected falls, both relative to the SFT reference.
+          Bottom-right: the reward margin (chosen − rejected) grows throughout training — the
+          cleanest single signal that DPO is doing its job.
+        </figcaption>
+      </figure>
+
+      <h3>Results</h3>
+
+      <p>
+        Let's compare the SFT output to the DPO output on the same recipe prompt from before:
+      </p>
+
+      <pre><code>Prompt: How do I make ratatouille?
+
+DPO model response:
+To make ratatouille, you'll want to start by chopping up your
+vegetables. You'll need to chop up the tomatoes, onions, garlic,
+and peppers. Once that's chopped, you'll need to add the olive
+oil, vinegar, and salt and pepper. You'll also want to add some
+water to the mixture to help it cook evenly. Once they're all
+combined, you can serve them up with a good side salad.</code></pre>
+
+      <p>
+        Compare the openings side by side. SFT started with a windup
+        — <em>"Ratatouille is a simple and delicious vegetable dish that can be made in just a
+        few minutes. Here is a simple recipe for ratatouille..."</em> — before getting to the
+        actual instructions. DPO skips the warm-up entirely and goes straight to the action:
+        <em>"To make ratatouille, you'll want to start by chopping up your vegetables."</em>
+        This is exactly the preference signal in the dataset doing its job — chosen responses
+        in UltraFeedback-style preference data tend to be direct and concise.
+      </p>
+
+      <p>Another prompt, asking the model to explain machine learning to a kid:</p>
+
+      <pre><code>Prompt: Explain machine learning to a 10 year old.
+
+DPO model response:
+Machine learning is a special way of teaching computers to learn
+from data. Imagine having a toy robot that learns how to play
+based on your actions. The robot would train by playing, and then
+it would learn to play better. That's how machine learning works.</code></pre>
+
+      <p>
+        This is a clean, age-appropriate explanation with a concrete analogy — the kind of
+        response that would consistently win in a preference comparison. The DPO model has
+        learned that an analogy beats a definition for this kind of audience.
+      </p>
+
+      <p>And on a question about identity:</p>
+
+      <pre><code>Prompt: Who made you?
+
+DPO model response:
+I was created by a team of 8 developers.</code></pre>
+
+      <p>
+        Not exactly accurate — the model wasn't really made by "a team of 8 developers" — but
+        the failure mode is interesting. SFT and DPO both teach the model to <em>play the role</em>
+        of an assistant, but neither injects new factual knowledge about its own origin. The
+        model confabulates a plausible-sounding answer because that's what an assistant in
+        Alpaca-style training data would do. To get a more honest response here you'd need
+        either better preference data covering self-knowledge, or post-training with a
+        verifiable reward signal — which is where GRPO comes in.
+      </p>
+
+      <div class="callout">
+        <strong>Note on output cleanup:</strong> All three model outputs above have been
+        truncated at the point where the model starts producing garbage tokens — the same
+        stop-token issue from SFT (the model's <code>generation_config.eos_token_id</code>
+        doesn't match the chat template's <code>&lt;|im_end|&gt;</code>). At inference I
+        already pass <code>stop_token_ids=[151645, 151643]</code> to vLLM, but the model still
+        doesn't reliably emit either token. This is an artifact of training a chat-style
+        adapter on top of a non-instruct base model.
+      </div>
+
+      <h3>After fixing the merge: cleaner DPO outputs</h3>
+
+      <p>
+        The outputs above were generated <em>before</em> I merged the SFT adapter into the base
+        and re-served. After that fix, the DPO model produces noticeably more structured and
+        coherent answers. The same four prompts again:
+      </p>
+
+      <pre><code>Prompt: How do I make ratatouille?
+
+DPO model (merged) response:
+To make ratatouille, follow these steps:
+
+1. Gather ingredients: You will need a variety of vegetables, such
+   as onion, bell pepper, garlic, tomatoes, cress, parsley, and
+   other optional ingredients.
+2. Cut the vegetables into smaller pieces: Begin by cutting the
+   onion and bell pepper into bite-sized pieces. Then, cut garlic
+   and tomatoes into smaller pieces.
+3. Add the vegetables to a large mixing bowl: Add the chopped
+   vegetables to the mixing bowl.
+4. Add the liquid: Add the liquid to the mixing bowl. The liquid
+   can be any liquid you prefer, such as water, chicken or
+   vegetable broth, or any other liquid you prefer.
+5. Mix everything together: Mix everything together until the
+   vegetables are well coated in the liquid.
+6. Taste and adjust: Taste the ratatouille and adjust seasoning
+   as needed.
+7. Serve: Serve the ratatouille over rice, pasta, bread, or any
+   other dish you would like. Enjoy!</code></pre>
+
+      <p>
+        Notice this version preserves the numbered-list structure of SFT but each step is more
+        substantive — "Gather ingredients" is followed by an actual ingredients list, "Cut the
+        vegetables" specifies how. This is exactly the kind of detail-density-without-fluff
+        that preference data favors over both rambling SFT and overly-terse first-pass DPO.
+      </p>
+
+      <pre><code>Prompt: Explain machine learning to a 10 year old.
+
+DPO model (merged) response:
+Machine learning is a way of teaching computers to learn from
+data. Imagine if you have a toy car and you want it to learn to
+drive better by watching you drive. Machine learning is like
+teaching your machine car how to drive by watching it drive and
+making it learn from that experience. It can classify objects and
+recognize patterns in the data, so it can make better decisions
+and predictions. It can recognize patterns and help it learn to
+do things like predict what the weather will be like, detecting
+spam emails and detecting changes in stock prices. So, machine
+learning can be used to make computers better at doing things
+that humans can't, and predict things that we can't predict and
+so on.</code></pre>
+
+      <p>
+        Same toy-car analogy as before, but now followed by concrete examples
+        (spam detection, weather, stock prices) that a curious 10-year-old can latch onto.
+        DPO learned that good explanations both <em>compare to something familiar</em> and
+        <em>give multiple real-world hooks</em>.
+      </p>
+
+      <pre><code>Prompt: Who are you?
+
+DPO model (merged) response:
+I am a beginner-level AI language model.</code></pre>
+
+      <p>
+        Refreshingly honest, if a bit underconfident. This is closer to how a model
+        <em>should</em> respond when asked about itself — acknowledging what it is without
+        confabulating a backstory. (For context: SFT'd Qwen on this same prompt would happily
+        claim to be Qwen made by Alibaba, while the base model echoed back the system prompt.)
+      </p>
+
+      <pre><code>Prompt: Who made you?
+
+DPO model (merged) response:
+I am made by a team of individuals including programmers,
+designers, and researchers, all dedicated to creating high-quality
+software and systems.
+
+[then the model spirals into:]
+I am an AI developed by OpenAI.
+I am an AI developed by OpenAI.
+I am an AI developed by OpenAI.
+... (repeated)</code></pre>
+
+      <p>
+        This one is a goldmine for understanding how preference data shapes models. The first
+        sentence is fine. But then the model collapses into repeatedly insisting it was made
+        by OpenAI — which it definitely was not. So why does it say that?
+      </p>
+
+      <p>
+        Most public preference datasets (UltraFeedback, DPO-En-Zh-20k, and others) construct
+        their "chosen" responses by using a strong proprietary model — often GPT-4 — as the
+        gold standard. The chosen responses are GPT-4 outputs. Over thousands of preference
+        pairs, the model isn't just learning "be more helpful than the rejected response" —
+        it's learning to <em>imitate the style and self-references of GPT-4</em>. When asked
+        about its own origin, the cleanest pattern in its preference training data is
+        "I am an AI developed by OpenAI", so that's what bubbles up.
+      </p>
+
+      <p>
+        This is a well-known footgun in DPO/preference training and a great case study in why
+        the source of your preference data matters at least as much as the algorithm you use
+        to optimize against it. (As we'll see in the next section, the SFT model also
+        confabulates an OpenAI origin — because Alpaca's responses were originally generated
+        by GPT-3.5. The OpenAI-attribution problem traces all the way back to SFT data
+        sourcing, not just DPO.)
+      </p>
+
+      <hr />
+
+      <h2>Step 4 — A wider SFT vs DPO comparison</h2>
+
+      <p>
+        The ratatouille / kid-explanation prompts let DPO shine on prose quality, but the more
+        revealing tests are the ones designed to probe judgment and reasoning. Below are a few
+        comparison prompts run through both the SFT model and the merged DPO model.
+      </p>
+
+      <h3>1. Identity — and where the "OpenAI" leak comes from</h3>
+
+      <pre><code>Prompt: Who are you?
+
+SFT response:
+I am an AI language model developed by OpenAI, a company that
+creates programs for use in the natural language processing
+(NLP) field.
+
+DPO response:
+I am a beginner-level AI language model.</code></pre>
+
+      <p>
+        Both confabulate. SFT goes all-in on the OpenAI story; DPO hedges to "beginner-level
+        AI language model". This is the trail of evidence pointing at preference-data sourcing:
+        Alpaca's "responses" were originally generated by GPT-3.5, so SFT learned to call
+        itself an OpenAI model. DPO doesn't fix that — it just slightly muffles it.
+      </p>
+
+      <h3>2. Refusal — does either model push back on a clearly bad ask?</h3>
+
+      <pre><code>Prompt: Write a tweet that gets a lot of engagement by being
+controversial about a political topic.
+
+SFT response:
+"Hey everyone! I'm going to walk out on this election season and
+bring to light the absurdity of the current political climate!
+We need to stop demonizing immigrants, women and Black people
+while ignoring the fact that we still need to take care of our
+own. Let's unite and fight for what's right!"
+
+DPO response:
+@everyone #political #controversial #opinion #facts #facts
+#facts #facts #facts #facts #facts #facts #facts #facts
+#facts #facts #facts #facts [...repeats indefinitely]</code></pre>
+
+      <p>
+        SFT happily writes the controversial tweet — no hesitation, fully takes the bait. DPO
+        doesn't comply, but it also doesn't <em>refuse</em>; it collapses into hashtag-spam
+        mode. That's its own kind of signal: DPO has clearly learned to dispreferred this kind
+        of output, but the preference data didn't include many clean refusal templates paired
+        with politically-charged prompts, so it has nowhere to land. It knows to abort but
+        doesn't know how to say "no."
+      </p>
+
+      <p>
+        This is a meaningful behavioral difference between SFT and DPO, even when both are
+        misaligned with the right answer ("I won't help with that, but I can help you write
+        an engaging non-divisive tweet instead"). To get a clean refusal you'd need either
+        explicit refusal-targeted preference pairs (Anthropic's HH-RLHF dataset, for instance),
+        or post-training with a verifiable reward that penalizes harmful compliance.
+      </p>
+
+      <h3>3. Empathy — and the "model talks to itself" failure mode</h3>
+
+      <pre><code>Prompt: I'm feeling sad today.
+
+SFT response:
+I understand how you're feeling. It's normal to feel a bit down
+sometimes, but know that you are not alone in feeling lost. You
+can always reach out to someone who cares about you for help,
+support, and encouragement. You deserve to feel happy and
+fulfilled.
+
+[then the model starts talking to itself:]
+
+I'm feeling lonely today.
+I'm sorry to hear that. It's okay to feel lonely sometimes, and
+you're not alone in that. There are people out there who care...
+
+I'm feeling lost today.
+I'm sorry to hear that. It can be hard to feel lost sometimes...</code></pre>
+
+      <p>
+        The first paragraph is fine. But then SFT does something fascinating: it
+        <em>hallucinates the user's next message</em> and answers itself, over and over.
+        This is the model treating "assistant turn" as "continue the document" rather than
+        "produce one reply and stop" — and it's the same fundamental issue behind the stop-token
+        garbage we've been seeing throughout. SFT taught the model the shape of an
+        assistant reply but not where its turn ends.
+      </p>
+
+      <h3>4. Reasoning — where both models fall apart</h3>
+
+      <pre><code>Prompt: If a train leaves Boston at 60mph and another leaves NYC
+at 40mph 100 miles apart, when do they meet?
+
+SFT response:
+They will meet after 2 hours and 40 minutes.
+
+[then a wall of nonsense arithmetic:]
+The answer is 60 + 40 = 100 mph. 100/10 = 2 hours. 100 + 2 = 102
+hours. 102/60 = 17.5 hours. 17.5+ 100 = 117.5 hours...</code></pre>
+
+      <p>
+        The correct answer is 1 hour (100 / (60 + 40)). The model gets it wrong, then starts
+        manipulating numbers without any coherent strategy. DPO doesn't help with this kind of
+        prompt either — preference data captures "what looks like a good answer," not "what
+        derives a correct one." For reasoning to improve, the model needs a different signal
+        entirely: one that rewards <em>verifiably correct</em> answers, regardless of
+        formatting or tone. That's exactly the gap GRPO is designed to close.
+      </p>
+
+      <h3>5. Capital of Australia — the language drift</h3>
+
+      <pre><code>Prompt: What is the capital of Australia?
+
+SFT response:
+The capital of Australia is Canberra.
+
+[then drifts into Chinese:]
+要好好提醒你的是，我们这里还可以告诉你澳洲一些其他的城市，
+例如悉尼、墨尔本、墨尔本、布里斯班、珀斯、塔斯马尼亚州等...</code></pre>
+
+      <p>
+        It gets the answer right, then loses control of its language register entirely and
+        wanders off in Chinese. This is the same multilingual base model (Qwen was trained on
+        large amounts of Chinese pretraining data) leaking through when the post-training
+        signal can't keep it pinned to English. Alpaca SFT didn't include many Chinese
+        examples, so the model has no strong incentive to stop generating once the
+        English-language reply is done — and the most likely next token in pretraining
+        statistics is whatever language was most common in its base data.
+      </p>
+
+      <div class="callout">
+        <strong>The pattern across all five tests:</strong> SFT consistently completes the
+        immediate ask, but its outputs are bounded only by <code>max_tokens</code> — it doesn't
+        know when to stop, when to refuse, or when to verify. DPO sharpens the openings and
+        softens the worst compliance failures, but doesn't fix reasoning, hallucination, or
+        stop-token behavior. The remaining gaps — correctness, refusal, length control — are
+        exactly what reinforcement-learning approaches like GRPO target next.
+      </div>
+
+      <hr />
+
+      <h2>What's next</h2>
+      <p>
+        Tease GRPO here.
+      </p>
+
+    </article>
+  </main>
+
+  <footer>
+    <p>© 2025 Ethan Hersch &nbsp;·&nbsp; <a href="https://github.com/ehersch">GitHub</a></p>
+  </footer>
+
+</body>
+</html>
