@@ -51,7 +51,7 @@ SYSTEM_PROMPT = (
 
 @app.function(
     gpu="A100-40GB",          # GRPO needs more headroom than A10G (24GB)
-    timeout=7200,             # GRPO is slower — needs to do rollouts
+    timeout=21600,            # 6 hours — GRPO is slow even with reduced rollouts
     volumes={"/output": volume},
 )
 def train():
@@ -86,6 +86,10 @@ def train():
         }
 
     ds = ds.map(format_example, remove_columns=ds.column_names)
+
+    # Subsample to keep training tractable. GSM8K has 7,473 examples, which at
+    # ~95s/step would take ~25 hours. We don't need all of them to see GRPO learn.
+    ds = ds.shuffle(seed=0).select(range(1000))
 
     # ── Reward functions ───────────────────────────────────────────────────
     ANSWER_RE = re.compile(r"<answer>\s*(-?[\d.,]+)\s*</answer>")
@@ -123,9 +127,9 @@ def train():
         num_train_epochs=1,
         per_device_train_batch_size=1,
         gradient_accumulation_steps=8,
-        num_generations=4,              # samples per prompt (the "group" in GRPO)
-        max_prompt_length=256,
-        max_completion_length=256,
+        num_generations=2,              # samples per prompt (the "group" in GRPO)
+        max_prompt_length=200,
+        max_completion_length=200,
         logging_steps=10,
         save_steps=200,
         bf16=True,

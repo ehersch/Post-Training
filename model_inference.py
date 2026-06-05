@@ -22,7 +22,8 @@ import modal
 BASE_MODEL = "Qwen/Qwen2.5-0.5B"
 SFT_ADAPTER_PATH = "/output/qwen-alpaca-sft"  # path inside the Modal Volume
 DPO_ADAPTER_PATH = "/output/qwen-dpo"
-SFT_MERGED_BASE = "/output/qwen-base-with-sft"  # base + SFT merged; DPO trained on this
+GRPO_ADAPTER_PATH = "/output/qwen-grpo"
+SFT_MERGED_BASE = "/output/qwen-base-with-sft"  # base + SFT merged; DPO/GRPO trained on this
 
 # Volume where the SFT adapter was saved by train_sft/train.py
 sft_volume = modal.Volume.from_name("qwen-sft-output")
@@ -127,6 +128,38 @@ def serve_dpo():
 
 
 # ---------------------------------------------------------------------------
+# Server: GRPO model (base + SFT merged, then GRPO LoRA applied)
+# ---------------------------------------------------------------------------
+
+
+@app.function(
+    gpu="A10G",
+    image=image,
+    scaledown_window=300,
+    volumes={"/output": sft_volume},
+)
+@modal.web_server(port=8003, startup_timeout=300)
+def serve_grpo():
+    # GRPO was trained on top of (base + SFT merged), same as DPO.
+    subprocess.Popen(
+        [
+            "python",
+            "-m",
+            "vllm.entrypoints.openai.api_server",
+            "--model",
+            SFT_MERGED_BASE,
+            "--enable-lora",
+            "--lora-modules",
+            f"grpo={GRPO_ADAPTER_PATH}",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8003",
+        ]
+    )
+
+
+# ---------------------------------------------------------------------------
 # Client
 # ---------------------------------------------------------------------------
 
@@ -161,12 +194,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dpo", action="store_true", help="Query the SFT+DPO model"
     )
+    parser.add_argument(
+        "--grpo", action="store_true", help="Query the SFT+GRPO model"
+    )
     parser.add_argument("--prompt", default="Who are you?")
     parser.add_argument("--base-url", default=None, help="Override Modal endpoint URL")
     args = parser.parse_args()
 
     if args.client:
-        if args.dpo:
+        if args.grpo:
+            url = (
+                args.base_url
+                or "https://herschethan--qwen-inference-serve-grpo.modal.run/v1"
+            )
+            run_client("grpo", args.prompt, url)
+        elif args.dpo:
             url = (
                 args.base_url
                 or "https://herschethan--qwen-inference-serve-dpo.modal.run/v1"
